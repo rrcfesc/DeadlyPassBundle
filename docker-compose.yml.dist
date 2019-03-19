@@ -1,0 +1,45 @@
+version: '2'
+services:
+  web:
+    image: apachephp:7.2
+    networks:
+      deadly_pass_net:
+        ipv4_address: 172.22.27.09
+    extra_hosts:
+      - "med_core_bundle.local.com:127.0.0.1"
+    expose:
+      - "9000"
+    ports:
+      - "8091:80"
+    volumes:
+      - ./:/var/www/html
+      - ./apache_vhost:/etc/apache2/sites-available/
+      - ./swapfiles:/swapfiles
+    environment:
+      PHP_XDEBUG_ENABLED: 1
+      XDEBUG_CONFIG: remote_host=172.22.27.1
+      PHP_IDE_CONFIG: "serverName=Symfony"
+    links:
+      - mysql
+    container_name: ${PROJECT_NAME}_web
+  mysql:
+    image: mysql:5.7
+    networks:
+      deadly_pass_net:
+        ipv4_address: 172.22.27.11
+    volumes:
+      - ./database/data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}prd
+    container_name: ${PROJECT_NAME}_db
+networks:
+  deadly_pass_net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.27.0/24
+          gateway: 172.22.27.1
